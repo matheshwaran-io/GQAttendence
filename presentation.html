@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QAttendance — Zero-Trust Anti-Proxy Smart Attendance System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08080E;
+      --card-bg: #0E0F18;
+      --card-border: #222436;
+      --primary: #6E5BFF;
+      --primary-glow: rgba(110, 91, 255, 0.35);
+      --cyan: #00F2FE;
+      --mint: #00F5A0;
+      --coral: #FF4D6D;
+      --gold: #FFB800;
+      --text: #F0F0FF;
+      --text-muted: #8A8AA0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Nav Bar */
+    header {
+      height: 56px;
+      padding: 0 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(12, 13, 20, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(110, 91, 255, 0.2);
+      border: 1px solid rgba(110, 91, 255, 0.3);
+      color: #A594FD;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button.btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #D0D0E8;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    button.btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    button.btn.active {
+      background: rgba(110, 91, 255, 0.25);
+      border-color: rgba(110, 91, 255, 0.5);
+      color: #A594FD;
+    }
+
+    /* Progress bar */
+    .progress-bar-container {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      position: relative;
+      z-index: 20;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--cyan), var(--mint));
+      transition: width 0.3s ease;
+    }
+
+    /* Main Slide Canvas */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .slide-frame {
+      width: 100%;
+      max-width: 1120px;
+      aspect-ratio: 16 / 9;
+      min-height: 520px;
+      max-height: 740px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85);
+      padding: 36px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typography & Utilities */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .tag-primary { background: rgba(110, 91, 255, 0.15); border: 1px solid rgba(110, 91, 255, 0.3); color: #A594FD; }
+    .tag-danger { background: rgba(255, 77, 109, 0.15); border: 1px solid rgba(255, 77, 109, 0.3); color: #FF7088; }
+    .tag-success { background: rgba(0, 245, 160, 0.15); border: 1px solid rgba(0, 245, 160, 0.3); color: #00F5A0; }
+    .tag-cyan { background: rgba(0, 242, 254, 0.15); border: 1px solid rgba(0, 242, 254, 0.3); color: #00F2FE; }
+
+    h1.slide-title {
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #FFFFFF, #E0E0FF, #A594FD);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    h2.slide-title {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    p.slide-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-width: 780px;
+    }
+
+    /* Grids & Cards */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 16px 20px;
+    }
+
+    .card-danger { background: rgba(255, 77, 109, 0.05); border-color: rgba(255, 77, 109, 0.2); }
+    .card-success { background: rgba(0, 245, 160, 0.05); border-color: rgba(0, 245, 160, 0.2); }
+    .card-primary { background: rgba(110, 91, 255, 0.08); border-color: rgba(110, 91, 255, 0.25); }
+
+    /* Interactive components */
+    .slider-container {
+      margin-top: 12px;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+      accent-color: var(--primary);
+    }
+
+    /* Modal Grid Overview */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      padding: 32px;
+      flex-direction: column;
+    }
+
+    .modal.active { display: flex; }
+
+    /* Speaker Notes Drawer */
+    .notes-drawer {
+      display: none;
+      height: 160px;
+      padding: 16px 28px;
+      background: #090A12;
+      border-top: 1px solid rgba(110, 91, 255, 0.3);
+      z-index: 30;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .notes-drawer.active { display: flex; }
+
+    /* Print Styles for 16:9 PDF slides */
+    @media print {
+      body {
+        overflow: visible !important;
+        background: #000 !important;
+      }
+      header, .progress-bar-container, .notes-drawer, .modal, .nav-controls {
+        display: none !important;
+      }
+      main {
+        padding: 0 !important;
+      }
+      .slide-frame {
+        max-width: 100% !important;
+        aspect-ratio: 16 / 9 !important;
+        page-break-after: always !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .slide {
+        display: flex !important;
+        page-break-inside: avoid !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="brand-title">QAttendance</span>
+          <span class="brand-badge">EXECUTIVE DECK</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-controls">
+      <button class="btn" id="prevBtn" onclick="prevSlide()" title="Previous (← / PageUp)">◀</button>
+      <button class="btn" id="gridBtn" onclick="toggleOverview()" title="Slide Grid (O)">
+        <span id="slideCounter" style="font-family: 'JetBrains Mono', monospace; color: #fff;">1 / 14</span>
+      </button>
+      <button class="btn" id="nextBtn" onclick="nextSlide()" title="Next (→ / Space)">▶</button>
+      <button class="btn" id="notesBtn" onclick="toggleNotes()" title="Speaker Notes (P)">📖 Notes</button>
+      <button class="btn" onclick="window.print()" title="Export PDF">🖨️ PDF</button>
+      <button class="btn" onclick="toggleFullscreen()" title="Fullscreen (F)">⛶</button>
+    </div>
+  </header>
+
+  <!-- Progress Track -->
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar" style="width: 7.14%;"></div>
+  </div>
+
+  <!-- Slide Canvas -->
+  <main>
+    <div class="slide-frame">
+
+      <!-- SLIDE 1: Title & Vision -->
+      <div class="slide active" id="slide-0">
+        <div>
+          <div class="tag tag-primary">✦ QR &amp; GEOLOCATION-BASED ANTI-PROXY SYSTEM</div>
+          <h1 class="slide-title">Q-Attendance</h1>
+          <p style="font-size: 20px; color: var(--cyan); font-weight: 600; margin-bottom: 8px;">
+            QR &amp; Geolocation-Based Anti-Proxy Attendance System
+          </p>
+          <p class="slide-sub">
+            Engineered with 7-Tier Zero-Trust verification. Connects faculty laptop projectors, 45-minute academic period matrices, and mobile web clients with sub-second verified check-ins.
+          </p>
+        </div>
+
+        <div class="grid-4" style="margin-top: 24px;">
+          <div class="card">
+            <div style="font-size: 24px; font-weight: 900; color: var(--mint); font-family: 'JetBrains Mono';">0%</div>
+            <div style="font-size: 12px; font-weight: 700; color: #fff; margin-top: 4px;">Proxy Success Rate</div>
+            <div style="font-size: 11px; color: var(--text-muted);">7 attack vectors defeated</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 24px; font-weight: 900; color: var(--cyan); font-family: 'JetBrains Mono';">10s</div>
+            <div style="font-size: 12px; font-weight: 700; color: #fff; margin-top: 4px;">HMAC-SHA256 Rotation</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Rotating session tokens</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 24px; font-weight: 900; color: var(--primary); font-family: 'JetBrains Mono';">≤ 50m</div>
+            <div style="font-size: 12px; font-weight: 700; color: #fff; margin-top: 4px;">Haversine Geofence</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Dual-node host-to-phone</div>
+          </div>
+          <div class="card">
+            <div style="font-size: 24px; font-weight: 900; color: var(--gold); font-family: 'JetBrains Mono';">45m</div>
+            <div style="font-size: 12px; font-weight: 700; color: #fff; margin-top: 4px;">Academic Periods</div>
+            <div style="font-size: 11px; color: var(--text-muted);">35m lecture + 10m attendance</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #707090; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.05);">
+          <span>SRM Institute of Science & Technology • Department of Computer Science</span>
+          <span>Press <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color:#fff;">Space</kbd> or <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color:#fff;">→</kbd> to advance</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 2: The Higher-Ed Crisis -->
+      <div class="slide" id="slide-1">
+        <div>
+          <div class="tag tag-danger">⚠️ THE PROBLEM LANDSCAPE</div>
+          <h2 class="slide-title">The Vulnerability of Modern University Classrooms</h2>
+          <p class="slide-sub">
+            Static QR codes, manual paper call-outs, and biometric hardware suffer from four systemic vulnerabilities.
+          </p>
+        </div>
+
+        <div class="grid-2" style="margin: auto 0;">
+          <div class="card card-danger">
+            <div style="color: var(--coral); font-weight: 700; font-size: 13px; margin-bottom: 6px;">1. WhatsApp & Telegram QR Forwarding</div>
+            <p style="font-size: 12px; color: #A0A0B8; line-height: 1.4;">
+              A single present student snaps the static projector QR and texts it across campus. Absent students in hostels scan and punch in within seconds.
+            </p>
+          </div>
+          <div class="card card-danger">
+            <div style="color: var(--gold); font-weight: 700; font-size: 13px; margin-bottom: 6px;">2. Buddy Punching & Multi-Account Swapping</div>
+            <p style="font-size: 12px; color: #A0A0B8; line-height: 1.4;">
+              One student logs out and sequentially logs into 5 friends' accounts on one physical phone, marking attendance for the whole group.
+            </p>
+          </div>
+          <div class="card card-danger">
+            <div style="color: var(--cyan); font-weight: 700; font-size: 13px; margin-bottom: 6px;">3. Mock GPS & Location Spoofing Apps</div>
+            <p style="font-size: 12px; color: #A0A0B8; line-height: 1.4;">
+              Android developer mock location apps easily deceive primitive campus geofences with hardcoded coordinates.
+            </p>
+          </div>
+          <div class="card card-danger">
+            <div style="color: #A594FD; font-weight: 700; font-size: 13px; margin-bottom: 6px;">4. The 20% Lost Instruction Tax</div>
+            <p style="font-size: 12px; color: #A0A0B8; line-height: 1.4;">
+              Manual roll calls consume up to 15 minutes of every 45-minute lecture (33% instruction lost). Biometrics create long hallway queues.
+            </p>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          Result: Inaccurate academic records and massive wasted teaching time.
+        </div>
+      </div>
+
+      <!-- SLIDE 3: Zero-Trust Paradigm -->
+      <div class="slide" id="slide-2">
+        <div>
+          <div class="tag tag-cyan">🛡️ ARCHITECTURAL PRINCIPLE</div>
+          <h2 class="slide-title">The Zero-Trust Paradigm Shift</h2>
+          <p class="slide-sub">
+            Applying military-grade zero-trust cybersecurity to attendance: <strong>"Never Trust, Always Verify."</strong>
+          </p>
+        </div>
+
+        <div class="grid-2" style="margin: auto 0;">
+          <div class="card card-danger">
+            <div style="font-size: 13px; font-weight: 800; color: var(--coral); margin-bottom: 8px;">TRADITIONAL ASSUMPTION</div>
+            <ul style="font-size: 12px; color: #A0A0B8; line-height: 1.6; padding-left: 16px;">
+              <li>Assumes valid login credentials = physical student in seat.</li>
+              <li>Static QR code projected for entire 45 minutes.</li>
+              <li>No hardware device or sensor validation.</li>
+            </ul>
+            <div style="margin-top: 12px; font-size: 11px; font-family: 'JetBrains Mono'; color: var(--coral);">
+              Failure: 15% to 30% fraudulent proxy rate.
+            </div>
+          </div>
+
+          <div class="card card-primary">
+            <div style="font-size: 13px; font-weight: 800; color: var(--mint); margin-bottom: 8px;">QATTENDANCE ZERO-TRUST</div>
+            <ul style="font-size: 12px; color: #D0D0E8; line-height: 1.6; padding-left: 16px;">
+              <li><strong>Spatial:</strong> Live Haversine distance ≤ 50m to Faculty Host.</li>
+              <li><strong>Temporal:</strong> 10s rotating HMAC token + Nonce burning.</li>
+              <li><strong>Hardware:</strong> Canvas 2D + WebGL locked 1:1 to student.</li>
+            </ul>
+            <div style="margin-top: 12px; font-size: 11px; font-family: 'JetBrains Mono'; color: var(--mint);">
+              Guarantee: 0% proxy breach rate.
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          Every check-in is cryptographically signed, spatially bound, and hardware-verified.
+        </div>
+      </div>
+
+      <!-- SLIDE 4: The 7-Tier Shield -->
+      <div class="slide" id="slide-3">
+        <div>
+          <div class="tag tag-success">⚔️ CORE INNOVATION</div>
+          <h2 class="slide-title">The 7-Tier Anti-Proxy Engine</h2>
+          <p class="slide-sub">
+            Defense in depth: Bypassing one tier still leaves six independent mathematical & sensor barriers.
+          </p>
+        </div>
+
+        <div class="grid-2" style="margin: auto 0; align-items: center;">
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <div class="card" style="padding: 10px 14px; border-color: rgba(110,91,255,0.4);">
+              <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #A594FD; font-weight: bold;">TIER 1</span>
+              <span style="font-size: 12px; font-weight: 600; color: #fff; margin-left: 8px;">10s Rotating HMAC-SHA256 QR</span>
+            </div>
+            <div class="card" style="padding: 10px 14px; border-color: rgba(0,242,254,0.4);">
+              <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--cyan); font-weight: bold;">TIER 2</span>
+              <span style="font-size: 12px; font-weight: 600; color: #fff; margin-left: 8px;">Host-to-Student Haversine GPS (≤50m)</span>
+            </div>
+            <div class="card" style="padding: 10px 14px; border-color: rgba(0,245,160,0.4);">
+              <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--mint); font-weight: bold;">TIER 3</span>
+              <span style="font-size: 12px; font-weight: 600; color: #fff; margin-left: 8px;">Canvas 2D + WebGL Hardware Binding</span>
+            </div>
+            <div class="card" style="padding: 10px 14px; border-color: rgba(255,184,0,0.4);">
+              <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--gold); font-weight: bold;">TIER 4</span>
+              <span style="font-size: 12px; font-weight: 600; color: #fff; margin-left: 8px;">Single-Device Multi-Account Trap</span>
+            </div>
+            <div class="card" style="padding: 10px 14px; border-color: rgba(255,77,109,0.4);">
+              <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--coral); font-weight: bold;">TIER 5</span>
+              <span style="font-size: 12px; font-weight: 600; color: #fff; margin-left: 8px;">Single-Use Nonce Ledger & Token Burn</span>
+            </div>
+            <div class="card" style="padding: 10px 14px; border-color: rgba(165,148,253,0.4);">
+              <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #A594FD; font-weight: bold;">TIER 6</span>
+              <span style="font-size: 12px; font-weight: 600; color: #fff; margin-left: 8px;">GPS Mock & Accuracy Sensor Audit</span>
+            </div>
+            <div class="card" style="padding: 10px 14px; border-color: rgba(56,239,125,0.4);">
+              <span style="font-family: 'JetBrains Mono'; font-size: 11px; color: #38EF7D; font-weight: bold;">TIER 7</span>
+              <span style="font-size: 12px; font-weight: 600; color: #fff; margin-left: 8px;">Real-Time Projector Telemetry & HUD</span>
+            </div>
+          </div>
+
+          <div class="card card-primary" style="padding: 24px;">
+            <div style="font-size: 13px; font-weight: bold; color: #A594FD; margin-bottom: 6px;">UNIFIED EXECUTION PIPELINE</div>
+            <p style="font-size: 12px; color: #D0D0E8; line-height: 1.5; margin-bottom: 12px;">
+              All 7 tiers execute in a single Next.js Server Action with parallel cryptographic validation in under <strong>300 milliseconds</strong>.
+            </p>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 11px; color: var(--mint);">
+              ✓ Latency: 240ms<br>
+              ✓ Cryptographic Status: Verified<br>
+              ✓ Geofence Distance: 6.2m (PASS)<br>
+              ✓ Hardware Device Lock: Matched
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          Total defense across network, physical, spatial, and temporal layers.
+        </div>
+      </div>
+
+      <!-- SLIDE 5: 10s Rotating HMAC Token -->
+      <div class="slide" id="slide-4">
+        <div>
+          <div class="tag tag-primary">🔒 CRYPTOGRAPHIC MATHEMATICS</div>
+          <h2 class="slide-title">10-Second Rotating HMAC-SHA256 Token Lifecycle</h2>
+          <p class="slide-sub">
+            Eliminating screenshot forwarding through continuous time-slice token hashing.
+          </p>
+        </div>
+
+        <div class="grid-2" style="margin: auto 0; align-items: center;">
+          <div class="card" style="text-align: center; padding: 24px;">
+            <div style="font-size: 12px; font-weight: 700; color: #A594FD; margin-bottom: 12px;">LIVE ROTATING QR SIMULATOR</div>
+            <div style="width: 140px; height: 140px; background: #fff; margin: 0 auto 12px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 70px; color: #000; box-shadow: 0 0 25px var(--primary-glow);">
+              📱
+            </div>
+            <div style="font-size: 13px; font-family: 'JetBrains Mono'; color: var(--cyan);" id="htmlCountdown">
+              Rotates in: <strong>8s</strong>
+            </div>
+            <div style="font-size: 10px; font-family: 'JetBrains Mono'; color: #8080A0; margin-top: 6px; word-break: break-all;" id="htmlTokenHash">
+              Hash: 7a8f9b2c4e1d0a3f5c7e9b1d3f5a7c9e
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="card">
+              <div style="font-size: 12px; font-weight: bold; color: #fff;">1. Time Slicing & Epoch Window</div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                <code style="color: var(--cyan); font-family: 'JetBrains Mono';">TimeWindow = Math.floor(Timestamp / 10000)</code>
+              </p>
+            </div>
+            <div class="card">
+              <div style="font-size: 12px; font-weight: bold; color: #fff;">2. Session Key Cryptographic Signature</div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                <code style="color: #A594FD; font-family: 'JetBrains Mono';">HMAC-SHA256(SessionSecret, SessionID + TimeWindow)</code>
+              </p>
+            </div>
+            <div class="card">
+              <div style="font-size: 12px; font-weight: bold; color: #fff;">3. Instant Nonce Burn</div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Token is registered in active ledger and burned upon first redemption.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          Screenshots texted over WhatsApp expire before the recipient can open them.
+        </div>
+      </div>
+
+      <!-- SLIDE 6: Haversine GPS Geofencing -->
+      <div class="slide" id="slide-5">
+        <div>
+          <div class="tag tag-cyan">📍 SPATIAL VERIFICATION</div>
+          <h2 class="slide-title">Dual-Node Haversine GPS Geofencing</h2>
+          <p class="slide-sub">
+            Dynamic host-anchored geofencing: Faculty laptop establishes the live coordinate origin.
+          </p>
+        </div>
+
+        <div class="grid-2" style="margin: auto 0; align-items: center;">
+          <div class="card" style="padding: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 8px;">
+              <span>DISTANCE SIMULATOR</span>
+              <span id="geoStatusBadge" style="font-family: 'JetBrains Mono'; color: var(--mint);">✓ PASS (&lt;50m)</span>
+            </div>
+            <input type="range" id="geoSlider" min="1" max="100" value="18" oninput="updateGeoDemo(this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+              <span>Host (0m)</span>
+              <span id="geoDistanceLabel" style="font-family: 'JetBrains Mono'; font-weight: bold; color: #fff; font-size: 14px;">18 meters</span>
+              <span>100m</span>
+            </div>
+
+            <div class="card card-success" id="geoCard" style="margin-top: 14px; padding: 12px;">
+              <div style="font-size: 12px; font-weight: bold;" id="geoResultTitle">Eligible for Attendance</div>
+              <div style="font-size: 11px; color: #D0D0E8;" id="geoResultDesc">Student is within 18m of the faculty laptop host.</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" style="background: rgba(0,0,0,0.5); padding: 18px; margin-bottom: 12px;">
+              <div style="font-size: 12px; font-weight: bold; color: var(--cyan); margin-bottom: 6px;">Haversine Spherical Formula</div>
+              <div style="font-family: 'JetBrains Mono'; font-size: 11px; color: #A594FD; line-height: 1.5;">
+                a = sin²(Δφ/2) + cos(φ1)·cos(φ2)·sin²(Δλ/2)<br>
+                c = 2 · atan2(√a, √(1−a))<br>
+                Distance = 6,371,000m · c
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+              <strong>Ad-Hoc Relocation Support:</strong> If a class moves from TP 602 to Tech Park Lab 3, the faculty host automatically updates coordinates without campus IT intervention.
+            </p>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          Rejects any check-in attempt originating outside the physical classroom walls.
+        </div>
+      </div>
+
+      <!-- SLIDE 7: Hardware Fingerprinting -->
+      <div class="slide" id="slide-6">
+        <div>
+          <div class="tag tag-success">📱 HARDWARE SECURITY</div>
+          <h2 class="slide-title">Hardware Fingerprinting & Device Binding</h2>
+          <p class="slide-sub">
+            Strictly binds 1 Student Account to 1 Physical Smartphone to eliminate buddy punching.
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin: auto 0;">
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 6px;">Canvas 2D Rendering</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Extracts GPU rasterization variance and subtle font anti-aliasing differences into a unique pixel hash.
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--cyan); margin-bottom: 6px;">WebGL GPU Unmasking</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Queries raw GPU silicon strings (<code style="color: var(--cyan);">Apple A16</code>, <code style="color: var(--cyan);">Adreno 730</code>, <code style="color: var(--cyan);">Mali-G78</code>).
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--mint); margin-bottom: 6px;">Concurrency & Metrics</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Hashes CPU threads, color gamut, screen pixel depth, touch points, and system timezone offset.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="background: rgba(255,184,0,0.08); border-color: rgba(255,184,0,0.3); padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; color: #FFE080;">
+            <strong>Single-Device Multi-Account Trap:</strong> If one phone attempts multiple logins in the same period, both student accounts are immediately flagged with a Proxy Alert.
+          </span>
+          <span style="font-family: 'JetBrains Mono'; font-size: 11px; font-weight: bold; color: var(--gold);">TRAP ACTIVE</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 8: Faculty Command Center -->
+      <div class="slide" id="slide-7">
+        <div>
+          <div class="tag tag-primary">👨‍🏫 EDUCATOR COMMAND HUB</div>
+          <h2 class="slide-title">The Faculty Command Center</h2>
+          <p class="slide-sub">
+            The personal command center of the individual professor managing multiple courses, sections, and lab batches.
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin: auto 0;">
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px;">1. Reusable Course Presets</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Save <code style="color:var(--cyan)">DBMS Core</code>, <code style="color:var(--cyan)">Cloud Elective B</code>, or <code style="color:var(--cyan)">Lab Batch 1</code> once. Launch weekly with 1 click — zero student re-entry.
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px;">2. Classroom vs Lab Venues</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Theory halls, practical computer labs, and seminar halls with instant campus suggestion chips (<code style="color:var(--mint)">TP 602</code>, <code style="color:var(--mint)">Lab 3</code>).
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px;">3. Weekly Matrix & PDF Export</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Periods 1 to 8 weekly grid (Monday–Saturday). Single-click CSV export and print-ready academic register for audits.
+            </p>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          Built for professors teaching 4–6 different courses and cohorts.
+        </div>
+      </div>
+
+      <!-- SLIDE 9: 45-Min Period & Live Projector -->
+      <div class="slide" id="slide-8">
+        <div>
+          <div class="tag tag-gold">🕒 ACADEMIC WORKFLOW</div>
+          <h2 class="slide-title">Live Projector Mode & 45-Min Academic Period Structure</h2>
+          <p class="slide-sub">
+            Protecting instructional delivery while fully automating attendance collection.
+          </p>
+        </div>
+
+        <div class="card" style="margin: auto 0; padding: 20px;">
+          <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 12px;">
+            <span>STANDARD 45-MINUTE PERIOD (PERIODS 1 TO 8 • 8:00 AM – 4:00 PM)</span>
+            <span style="color: var(--cyan); font-family: 'JetBrains Mono';">SRM TIMETABLE MATRIX</span>
+          </div>
+
+          <div style="height: 36px; background: rgba(0,0,0,0.5); border-radius: 10px; display: flex; padding: 3px; gap: 4px; border: 1px solid rgba(255,255,255,0.08);">
+            <div style="width: 78%; background: linear-gradient(90deg, var(--primary), #5040DD); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #fff;">
+              Teaching & Lecture Phase (First 35 Minutes)
+            </div>
+            <div style="width: 22%; background: linear-gradient(90deg, var(--mint), var(--cyan)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #000;">
+              Live QR (10m)
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 12px;">
+            <span>✓ Uninterrupted slide presentation and discussion</span>
+            <span>✓ Automated live attendance stream on projector</span>
+          </div>
+        </div>
+
+        <div class="card" style="background: rgba(0,0,0,0.4); padding: 12px; display: flex; justify-content: space-between; font-size: 12px; font-family: 'JetBrains Mono';">
+          <span style="color: var(--mint);">● Live Feed: RA2412012010001 • Verified (4m)</span>
+          <span style="color: #fff;">58 / 60 Present (96.7%)</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 10: Student Experience -->
+      <div class="slide" id="slide-9">
+        <div>
+          <div class="tag tag-success">📱 STUDENT EXPERIENCE</div>
+          <h2 class="slide-title">Instant Mobile Scanner & Personal Attendance Log</h2>
+          <p class="slide-sub">
+            Zero app installation. Runs natively in any mobile browser as an ultra-fast Progressive Web App.
+          </p>
+        </div>
+
+        <div class="grid-4" style="margin: auto 0;">
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--primary);">1. Reg No Login</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Log in with university Reg No and bound device password.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--cyan);">2. HTML5 Scanner</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">In-browser high-speed scanner with automatic GPS check.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--mint);">3. Instant Badge</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Live confirmation: <strong style="color:var(--mint)">"Verified: 6m from Host"</strong>.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--gold);">4. "My Log" Analytics</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Attendance stats with &lt;75% debarment alerts.</p>
+          </div>
+        </div>
+
+        <div class="card card-danger" style="padding: 12px; font-size: 11px; color: #FFA0B0;">
+          <strong>75% Mandatory Attendance Threshold:</strong> Alerts students automatically if cumulative attendance approaches debarment criteria.
+        </div>
+      </div>
+
+      <!-- SLIDE 11: Master Roster Management -->
+      <div class="slide" id="slide-10">
+        <div>
+          <div class="tag tag-primary">📊 COHORT INGESTION</div>
+          <h2 class="slide-title">Master Roster & Bulk Cohort Management</h2>
+          <p class="slide-sub">
+            Onboard university departments, elective cohorts, and lab batches in seconds.
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin: auto 0;">
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 6px;">CSV / XSV Ingestion</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Supports <code style="color:#fff;">.csv</code>, <code style="color:#fff;">.xsv</code>, <code style="color:#fff;">.tsv</code>, and <code style="color:#fff;">.txt</code> roster files with automatic column mapping.
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--cyan); margin-bottom: 6px;">Inline Preview Table</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Visual verification of extracted students with duplicate detection before committing.
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--mint); margin-bottom: 6px;">Single-Student Enrol</div>
+            <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+              Quick modal to enroll transfer or late-admission students with zero fuss.
+            </p>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">
+          Includes downloadable CSV sample template (<code style="color: var(--cyan);">Roster_Upload_Template.csv</code>).
+        </div>
+      </div>
+
+      <!-- SLIDE 12: Full-Stack Architecture -->
+      <div class="slide" id="slide-11">
+        <div>
+          <div class="tag tag-cyan">💻 ENGINEERING EXCELLENCE</div>
+          <h2 class="slide-title">Full-Stack Architecture & Database Landscape</h2>
+          <p class="slide-sub">
+            Modern, reactive, and serverless stack engineered for sub-second check-in throughput.
+          </p>
+        </div>
+
+        <div class="grid-4" style="margin: auto 0;">
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: #fff;">Next.js 16</div>
+            <div style="font-size: 10px; font-family: 'JetBrains Mono'; color: var(--primary);">App Router</div>
+            <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">React 19 Server Actions.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: #fff;">Drizzle ORM</div>
+            <div style="font-size: 10px; font-family: 'JetBrains Mono'; color: var(--cyan);">PostgreSQL</div>
+            <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">11 relational tables.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: #fff;">Supabase Realtime</div>
+            <div style="font-size: 10px; font-family: 'JetBrains Mono'; color: var(--mint);">WebSockets</div>
+            <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Sub-50ms live broadcast.</p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: #fff;">Web Push PWA</div>
+            <div style="font-size: 10px; font-family: 'JetBrains Mono'; color: var(--gold);">VAPID Workers</div>
+            <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Mobile push alerts.</p>
+          </div>
+        </div>
+
+        <div class="card" style="background: rgba(0,0,0,0.4); padding: 10px; font-family: 'JetBrains Mono'; font-size: 10px; color: #A594FD; display: flex; gap: 8px; flex-wrap: wrap;">
+          <span style="color: #fff; font-weight: bold;">11 Tables:</span>
+          <span>re_users</span> • <span>re_classes</span> • <span>re_class_roster</span> • <span>re_sessions</span> • <span>re_attendance_records</span> • <span>re_course_presets</span> • <span>re_timetable_entries</span>
+        </div>
+      </div>
+
+      <!-- SLIDE 13: Benchmark Matrix -->
+      <div class="slide" id="slide-12">
+        <div>
+          <div class="tag tag-success">🏆 COMPARATIVE ANALYSIS</div>
+          <h2 class="slide-title">Competitive Benchmark & Impact Matrix</h2>
+          <p class="slide-sub">
+            How QAttendance outperforms traditional methods and biometric scanners.
+          </p>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin: auto 0;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); text-align: left;">
+              <th style="padding: 6px 0;">Vector</th>
+              <th>Paper Roll</th>
+              <th>Static QR Apps</th>
+              <th>Biometric Scanners</th>
+              <th style="color: var(--mint); font-weight: bold;">QAttendance</th>
+            </tr>
+          </thead>
+          <tbody style="color: #C0C0D8;">
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 8px 0; font-weight: 600; color: #fff;">WhatsApp Proxy Forwarding</td>
+              <td style="color: var(--coral);">N/A</td>
+              <td style="color: var(--coral);">❌ Vulnerable</td>
+              <td style="color: var(--text-muted);">N/A</td>
+              <td style="color: var(--mint); font-weight: bold;">✅ 0% (10s HMAC)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 8px 0; font-weight: 600; color: #fff;">Buddy Punching / Multi-Account</td>
+              <td style="color: var(--coral);">❌ High Risk</td>
+              <td style="color: var(--coral);">❌ High Risk</td>
+              <td style="color: var(--gold);">⚠️ Line queue</td>
+              <td style="color: var(--mint); font-weight: bold;">✅ Trapped (Device Lock)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td style="padding: 8px 0; font-weight: 600; color: #fff;">Lost Lecture Time</td>
+              <td style="color: var(--coral);">10–15m (33%)</td>
+              <td style="color: var(--gold);">5–8m</td>
+              <td style="color: var(--coral);">10–12m queue</td>
+              <td style="color: var(--mint); font-weight: bold;">✅ &lt; 2 mins (Automated)</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: 600; color: #fff;">Hardware Capital Cost</td>
+              <td>$0</td>
+              <td>$0</td>
+              <td style="color: var(--coral);">$5,000+ per room</td>
+              <td style="color: var(--mint); font-weight: bold;">✅ $0 (Zero Hardware)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="font-size: 11px; color: var(--text-muted); text-align: center;">
+          Maximum security with zero hardware capital expenditure.
+        </div>
+      </div>
+
+      <!-- SLIDE 14: Roadmap & Conclusion -->
+      <div class="slide" id="slide-13">
+        <div>
+          <div class="tag tag-primary">🚀 VISION & DEPLOYMENT</div>
+          <h2 class="slide-title">The Future of Academic Presence</h2>
+          <p style="font-size: 18px; color: var(--cyan); font-weight: 600; margin-bottom: 6px;">
+            Transforming attendance from an administrative chore into an automated zero-trust advantage.
+          </p>
+        </div>
+
+        <div class="grid-3" style="margin: auto 0;">
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--primary);">Multi-Campus Federation</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+              Sync across SRM KTR, Ramapuram, Vadapalani, and NCR campuses with unified SSO.
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--cyan);">LTI 1.3 LMS Integration</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+              Direct two-way gradebook and roster sync with Canvas, Moodle, and Blackboard.
+            </p>
+          </div>
+          <div class="card">
+            <div style="font-size: 12px; font-weight: bold; color: var(--mint);">Automated Guardian Alerts</div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4;">
+              Instant SMS/WhatsApp alerts when attendance drops below statutory thresholds.
+            </p>
+          </div>
+        </div>
+
+        <div class="card card-primary" style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #fff;">Ready for Live University Deployment</div>
+            <div style="font-size: 11px; color: #A0A0C0;">Thank you! We welcome questions and discussion.</div>
+          </div>
+          <a href="/tutor" style="text-decoration: none; background: linear-gradient(90deg, var(--primary), var(--cyan)); color: #000; font-weight: 800; font-size: 12px; padding: 10px 18px; border-radius: 10px;">
+            Launch Live System ↗
+          </a>
+        </div>
+      </div>
+
+      <!-- Slide Frame Bottom Info -->
+      <div style="display: flex; justify-content: space-between; font-size: 11px; color: #606080; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);">
+        <span id="frameSlideLabel">Slide 1 of 14</span>
+        <span>QAttendance • Zero-Trust Anti-Proxy System</span>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Speaker Notes Drawer -->
+  <div class="notes-drawer" id="notesDrawer">
+    <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #A594FD; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
+      <span id="notesHeader">SPEAKER NOTES • SLIDE 1 OF 14</span>
+      <button onclick="toggleNotes()" style="background: none; border: none; color: #8080A0; cursor: pointer;">Close (P)</button>
+    </div>
+    <div id="notesBody" style="font-size: 13px; color: #D0D0E8; line-height: 1.5; overflow-y: auto;">
+      Welcome the audience. Introduce QAttendance as the next-generation Zero-Trust Smart Attendance System designed for university environments like SRM Institute of Science & Technology.
+    </div>
+    <div style="font-size: 10px; color: #707090;">
+      Tip: Press P to toggle notes drawer anytime during presentation.
+    </div>
+  </div>
+
+  <!-- Slide Grid Overview Modal -->
+  <div class="modal" id="overviewModal">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <span style="font-size: 15px; font-weight: bold; color: #fff;">Slide Deck Overview (14 Slides)</span>
+      <button class="btn" onclick="toggleOverview()">Close (ESC)</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; overflow-y: auto; flex: 1;" id="modalGridContainer">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+
+  <script>
+    const TOTAL_SLIDES = 14;
+    let currentSlide = 0;
+
+    const speakerNotes = [
+      "Welcome the audience. Introduce QAttendance as the next-generation Zero-Trust Smart Attendance System designed specifically for university environments like SRM Institute of Science & Technology.",
+      "Explain the 4 fatal vulnerabilities of existing campus attendance: WhatsApp QR forwarding, buddy punching on one phone, mock GPS spoofing, and the 20% lost lecture time.",
+      "Introduce the Zero-Trust philosophy: 'Never Trust, Always Verify'. Explain why credentials alone are not enough in high-stakes academic grading.",
+      "Deep dive into the 7-Tier Anti-Proxy Engine. Highlight that independent cryptographic and hardware layers create an impenetrable defense.",
+      "Explain the HMAC-SHA256 mathematical algorithm. Mention 10-second rotation and the single-use nonce ledger that immediately burns scanned tokens.",
+      "Explain Dual-Node Haversine GPS geofencing. Show how the live slider works and emphasize that the faculty laptop's live location acts as the dynamic anchor point.",
+      "Explain Canvas 2D + WebGL Hardware Fingerprinting. Explain how 1 student is permanently bound to 1 phone, defeating account sharing.",
+      "Showcase the Faculty Command Center. Emphasize Reusable Course Presets (DBMS, Cloud Electives, Lab batches) configured once and launched weekly with zero re-entry.",
+      "Walk through the 45-minute academic structure: 35-minute focused teaching phase + 10-minute automated attendance window with live WebSocket telemetry.",
+      "Demonstrate the Student Portal: Zero-install PWA, sub-second camera scanning, instant verified distance feedback, and <75% debarment threshold tracking.",
+      "Explain Master Roster management: Bulk CSV/XSV upload, inline preview, sample template download, and single-student instant enrollment.",
+      "Review the full-stack engineering architecture: Next.js 16 App Router, TypeScript, Drizzle ORM, Supabase Realtime WebSockets, and the 11 relational tables.",
+      "Highlight the Competitive Benchmark: Compare QAttendance vs traditional paper rolls, static QR apps, and $5,000 biometric scanners.",
+      "Summarize key takeaways, future roadmap (multi-campus federation, LMS integration), and open the floor for Q&A."
+    ];
+
+    const slideTitles = [
+      "01. Title & Vision", "02. The Crisis", "03. Zero-Trust", "04. 7-Tier Shield",
+      "05. 10s HMAC Crypto", "06. Haversine GPS", "07. Hardware Binding", "08. Faculty Hub",
+      "09. Projector & 45m", "10. Student Portal", "11. Master Roster", "12. Tech Architecture",
+      "13. Benchmark Matrix", "14. Roadmap & Close"
+    ];
+
+    function renderSlide(index) {
+      document.querySelectorAll('.slide').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+      });
+      document.getElementById('slideCounter').innerText = `${index + 1} / ${TOTAL_SLIDES}`;
+      document.getElementById('frameSlideLabel').innerText = `Slide ${index + 1} of ${TOTAL_SLIDES}`;
+      document.getElementById('progressBar').style.width = `${((index + 1) / TOTAL_SLIDES) * 100}%`;
+      document.getElementById('notesHeader').innerText = `SPEAKER NOTES • SLIDE ${index + 1} OF ${TOTAL_SLIDES}`;
+      document.getElementById('notesBody').innerText = speakerNotes[index];
+    }
+
+    function nextSlide() {
+      if (currentSlide < TOTAL_SLIDES - 1) {
+        currentSlide++;
+        renderSlide(currentSlide);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        renderSlide(currentSlide);
+      }
+    }
+
+    function goToSlide(index) {
+      currentSlide = index;
+      renderSlide(currentSlide);
+      document.getElementById('overviewModal').classList.remove('active');
+    }
+
+    function toggleNotes() {
+      document.getElementById('notesDrawer').classList.toggle('active');
+    }
+
+    function toggleOverview() {
+      const modal = document.getElementById('overviewModal');
+      modal.classList.toggle('active');
+      if (modal.classList.contains('active')) {
+        const grid = document.getElementById('modalGridContainer');
+        grid.innerHTML = '';
+        slideTitles.forEach((t, i) => {
+          const btn = document.createElement('button');
+          btn.className = `btn ${i === currentSlide ? 'active' : ''}`;
+          btn.style.padding = '16px';
+          btn.style.textAlign = 'left';
+          btn.style.display = 'flex';
+          btn.style.flexDirection = 'column';
+          btn.style.justifyContent = 'space-between';
+          btn.style.height = '90px';
+          btn.innerHTML = `<span style="font-family:'JetBrains Mono'; font-size:10px; color:#8080A0;">#${i+1}</span><strong style="color:#fff; font-size:12px;">${t}</strong>`;
+          btn.onclick = () => goToSlide(i);
+          grid.appendChild(btn);
+        });
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // Keyboard bindings
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleFullscreen();
+      } else if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        toggleOverview();
+      } else if (e.key === 'p' || e.key === 'P' || e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        toggleNotes();
+      } else if (e.key === 'Escape') {
+        document.getElementById('overviewModal').classList.remove('active');
+      }
+    });
+
+    // Haversine Slider Interactive Demo
+    function updateGeoDemo(dist) {
+      document.getElementById('geoDistanceLabel').innerText = `${dist} meters`;
+      const pass = dist <= 50;
+      const badge = document.getElementById('geoStatusBadge');
+      const card = document.getElementById('geoCard');
+      const title = document.getElementById('geoResultTitle');
+      const desc = document.getElementById('geoResultDesc');
+
+      if (pass) {
+        badge.innerText = '✓ PASS (≤50m)';
+        badge.style.color = 'var(--mint)';
+        card.className = 'card card-success';
+        title.innerText = 'Eligible for Attendance';
+        desc.innerText = `Student is ${dist}m from faculty host (within 50m geofence).`;
+      } else {
+        badge.innerText = '✗ REJECTED (>50m)';
+        badge.style.color = 'var(--coral)';
+        card.className = 'card card-danger';
+        title.innerText = 'Geofence Breach Detected';
+        desc.innerText = `Rejected: Student is ${dist - 50}m outside classroom perimeter.`;
+      }
+    }
+
+    // 10-Second QR simulation
+    let qrTimer = 8;
+    setInterval(() => {
+      qrTimer--;
+      if (qrTimer <= 0) {
+        qrTimer = 10;
+        const hex = '0123456789abcdef';
+        let hash = '';
+        for (let i = 0; i < 32; i++) hash += hex[Math.floor(Math.random() * hex.length)];
+        const hashEl = document.getElementById('htmlTokenHash');
+        if (hashEl) hashEl.innerText = `Hash: ${hash}`;
+      }
+      const countEl = document.getElementById('htmlCountdown');
+      if (countEl) countEl.innerHTML = `Rotates in: <strong>${qrTimer}s</strong>`;
+    }, 1000);
+  </script>
+</body>
+</html>

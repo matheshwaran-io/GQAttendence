@@ -1,26 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg: #0A0A0F;
+    --color-surface: #111118;
+    --color-surface-2: #1A1A24;
+    --color-border: #222230;
+    --color-border-2: #2E2E40;
+
+    --color-accent: #6E5BFF;
+    --color-accent-dim: rgba(110, 91, 255, 0.09);
+    --color-accent-glow: rgba(110, 91, 255, 0.25);
+
+    --color-present: #22C97A;
+    --color-absent: #FF4D6A;
+    --color-flagged: #FFB340;
+    --color-online: #38BDF8;
+
+    --color-text-1: #F0F0FF;
+    --color-text-2: #9090A8;
+    --color-text-3: #50505E;
+
+    --font-syne: 'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-1);
+    font-family: var(--font-inter);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: var(--font-syne);
+  }
+
+  code, kbd, samp, pre, .font-mono {
+    font-family: var(--font-mono);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222230;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2E2E40;
+}
+
+/* Utilities */
+.shadow-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px #222230;
+}
+
+.shadow-accent-glow {
+  box-shadow: 0 0 24px rgba(110, 91, 255, 0.25);
+}
+
+.shadow-modal {
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px #222230;
+}
+
+/* QR Ping Pulse Animation */
+@keyframes qrPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+.animate-qr-pulse {
+  animation: qrPulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
